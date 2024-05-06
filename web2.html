@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>zz聊天室：suer2</title>
+        
+    <script type="text/javascript">
+        const userName = 'use2'
+        function WebSocketTest() {
+
+            // 接收消息之后的处理函数
+            const dealMsg = (val) => {
+                console.log('val: ', val);
+                if (val.type === 'msg') {
+                    // 创建一个新的div元素
+                    const newDiv = document.createElement('div');
+                    // 如果是自己的消息，则置于右侧
+                    if (val.data.username === userName) {
+                        newDiv.style.alignSelf = 'end'
+                        newDiv.textContent = val.data.msg;
+                    } else {
+                        // 设置div的内容为接收到的消息
+                        newDiv.textContent = val.data.username + '：' + val.data.msg;
+                    }
+                    const chatWin = document.getElementById('msg-content-list');
+                    // 将新的div插入到消息内容列表中
+                    chatWin.appendChild(newDiv);
+                }
+            }
+
+            if ("WebSocket" in window) {
+                alert("您的浏览器支持 WebSocket!正在连接服务...");
+
+                // 打开一个 web socket
+                var ws = new WebSocket("ws://localhost:9998");
+
+                globalThis.ws = ws;
+
+                ws.onopen = function () {
+                    // Web Socket 已连接上，使用 send() 方法发送数据
+                    console.log("建立连接...");
+
+                };
+
+                ws.onmessage = function (evt) {
+                    var received_msg = evt.data;
+                    console.log('接收服务消息：', received_msg);
+                    dealMsg(JSON.parse(received_msg));
+                };
+
+                ws.onclose = function () {
+                    // 关闭 websocket
+                    alert("连接已关闭...");
+                };
+            }
+
+            else {
+                // 浏览器不支持 WebSocket
+                alert("您的浏览器不支持 WebSocket!");
+            }
+        }
+
+        function sendMessage() {
+            const target = document.getElementById('msgContent');
+            if (globalThis.ws) {
+                console.log('userName: ', userName);
+                globalThis.ws.send(JSON.stringify({
+                    type: 'msg',
+                    data: {
+                        username: userName,
+                        msg: target.value
+                    }
+                }));
+            } else {
+                alert('请先建立连接')
+            }
+        }
+
+    </script>
+            
+</head>
+
+<body>
+
+    <div id="sse"
+        style="padding: 10px;margin: 10px;width: max-content; border: 1px solid #e3e3e3; background-color: #e4e4e4;">
+        <a href="javascript:WebSocketTest()">连接WebSocket服务</a>
+    </div>
+
+    <div id="msg-content-list"
+        style="width: 800px;height: 800px;overflow-y: scroll;border: 1px solid #e3e3e3;display: flex;flex-direction: column;">
+    </div>
+
+    <textarea name="" id="msgContent" cols="30" rows="10"></textarea>
+    <button onclick="sendMessage()">发送</button>
+
+</body>
+
+</html>
